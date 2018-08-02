@@ -148,33 +148,34 @@ for idx, file in enumerate(fileList):
         line = next(IT.islice(io.StringIO(xml_contents), lineno))
         caret = '{:=>{}}'.format('^', column)
         err.msg = '{}\n{}\n{}'.format(err, line, caret)
-        raise
+        print(' - Cannot parse the file :', file, '. Please check the *.xml format is properly defined.')
+        #raise
+    else:
+        # Extract the information
+        xml_ptn_no = 1
+        for item in tree.findall('us-patent-grant'):
+            USPTN = USPTO.USPatent()
+            parse_chk = xml_parsing(item.attrib.get('dtd-version'), item, file, USPTN)
 
-    # Extract the information
-    xml_ptn_no = 1
-    for item in tree.findall('us-patent-grant'):
-        USPTN = USPTO.USPatent()
-        parse_chk = xml_parsing(item.attrib.get('dtd-version'), item, file, USPTN)
+            if parse_chk == 1:
+                # Index Setting
+                IDX_SET_PATENT(USPTN)
+                IDX_SET_PUB_COUNTRY(USPTN)
+                IDX_SET_PUB_DATE(USPTN)
+                IDX_SET_APP_DOCNUMBER_IDX(USPTN)
+                IDX_SET_APP_COUNTRY(USPTN)
+                IDX_SET_APP_DATE_IDX(USPTN)
+                IDX_SET_INV_TITLE(USPTN)
+                IDX_SET_APPLICANTS(USPTN)
+                IDX_SET_CITING(USPTN)
 
-        if parse_chk == 1:
-            # Index Setting
-            IDX_SET_PATENT(USPTN)
-            IDX_SET_PUB_COUNTRY(USPTN)
-            IDX_SET_PUB_DATE(USPTN)
-            IDX_SET_APP_DOCNUMBER_IDX(USPTN)
-            IDX_SET_APP_COUNTRY(USPTN)
-            IDX_SET_APP_DATE_IDX(USPTN)
-            IDX_SET_INV_TITLE(USPTN)
-            IDX_SET_APPLICANTS(USPTN)
-            IDX_SET_CITING(USPTN)
+                print('   > Saved Patent :  %10s  | Val : %18s | Total : %10d | In Xml : %10d '
+                      %(USPTN.pub_docnumber, USPTN.valid_patent(), tot_ptn_no, xml_ptn_no))
 
-            print('   > Saved Patent :  %10s  | Val : %18s | Total : %10d | In Xml : %10d '
-                  %(USPTN.pub_docnumber, USPTN.valid_patent(), tot_ptn_no, xml_ptn_no))
-
-            tot_ptn_no += 1
-            xml_ptn_no += 1
-        else:
-            print('   > Cannot save the patent because of the failures in parsing process')
+                tot_ptn_no += 1
+                xml_ptn_no += 1
+            else:
+                print('   > Cannot save the patent because of the failures in parsing process')
 
 # Save database
 print('\n - Saving Patent datafiles to ', LOCAL_BASE)
