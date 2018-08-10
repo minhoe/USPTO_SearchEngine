@@ -18,7 +18,7 @@ import USPTO
 def xml_value_to_string(elem, elem_name, file_name, pub_doc_no = '' ):
     output = ''
     try:
-        output = elem.text.strip()
+        output = str(elem.text.strip())
     except AttributeError as err:
         print(' [Warn] Cannot find "', elem_name, '"','  > pub_doc_no:', pub_doc_no, '> file:', file_name)
         output = ''

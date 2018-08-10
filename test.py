@@ -40,7 +40,14 @@ print(','.join([]))
 dd = "['a','b']"
 cc = ''
 
-gg = eval(cc)
-
+gg = eval(dd)
 gg.append('c')
+
 print(gg)
+
+
+a = set([1,2,3])
+b = set([2,3,4])
+c = set([3,6,7])
+d = [a,b,c]
+print(list(set.intersection(*d)))

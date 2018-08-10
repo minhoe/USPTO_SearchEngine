@@ -40,8 +40,8 @@ PATENT_IDX = {}
 PUB_COUNTRY_IDX = {}
 PUB_DATE_IDX = {}
 APP_DOCNUMBER_IDX = {}
-APP_COUNTRY_IDX = {}
-APP_DATE_IDX = {}
+#APP_COUNTRY_IDX = {} # Lack of memory..
+#APP_DATE_IDX = {} # Lack of memory..
 INV_TITLE_IDX = {}
 APPLICANTS_IDX = {}
 CITING_IDX = {}
@@ -72,17 +72,17 @@ def IDX_SET_APP_DOCNUMBER_IDX(USPTN):
     else:
         APP_DOCNUMBER_IDX[USPTN.app_docnumber] = [USPTN.pub_docnumber]
 
-def IDX_SET_APP_COUNTRY(USPTN):
-    if USPTN.app_country.upper() in APP_COUNTRY_IDX:
-        APP_COUNTRY_IDX[USPTN.app_country.upper()].append(USPTN.pub_docnumber)
-    else:
-        APP_COUNTRY_IDX[USPTN.app_country.upper()] = [USPTN.pub_docnumber]
-
-def IDX_SET_APP_DATE_IDX(USPTN):
-    if USPTN.app_date in APP_DATE_IDX:
-        APP_DATE_IDX[USPTN.app_date].append(USPTN.pub_docnumber)
-    else:
-        APP_DATE_IDX[USPTN.app_date] = [USPTN.pub_docnumber]
+# def IDX_SET_APP_COUNTRY(USPTN):
+#     if USPTN.app_country.upper() in APP_COUNTRY_IDX:
+#         APP_COUNTRY_IDX[USPTN.app_country.upper()].append(USPTN.pub_docnumber)
+#     else:
+#         APP_COUNTRY_IDX[USPTN.app_country.upper()] = [USPTN.pub_docnumber]
+#
+# def IDX_SET_APP_DATE_IDX(USPTN):
+#     if USPTN.app_date in APP_DATE_IDX:
+#         APP_DATE_IDX[USPTN.app_date].append(USPTN.pub_docnumber)
+#     else:
+#         APP_DATE_IDX[USPTN.app_date] = [USPTN.pub_docnumber]
 
 def IDX_SET_INV_TITLE(USPTN):
     if USPTN.invention_title is not None and USPTN.invention_title != '':
@@ -108,19 +108,21 @@ def IDX_SET_CITING(USPTN):
         if ptn is None or ptn is '':
             pass
         else:
+            #print(ptn)
             if ptn in CITING_IDX:
                 CITING_IDX[ptn].append(USPTN.pub_docnumber)
             else:
                 CITING_IDX[ptn] = [USPTN.pub_docnumber]
-    # Other citation
-    for ptn in USPTN.other_reference_list:
-        if ptn is None or ptn is '':
-            pass
-        else:
-            if ptn in CITING_IDX:
-                CITING_IDX[ptn].append(USPTN.pub_docnumber)
-            else:
-                CITING_IDX[ptn] = [USPTN.pub_docnumber]
+    # Other citation --> Skip to put other citations because of lack of memory.
+    # for ptn in USPTN.other_reference_list:
+    #     if ptn is None or ptn is '':
+    #         pass
+    #     else:
+    #         #print('--->', ptn)
+    #         if ptn in CITING_IDX:
+    #             CITING_IDX[ptn].append(USPTN.pub_docnumber)
+    #         else:
+    #             CITING_IDX[ptn] = [USPTN.pub_docnumber]
 
 ## --------------------------------------------------------------------------------------------------
 
@@ -163,8 +165,8 @@ for idx, file in enumerate(fileList):
                 IDX_SET_PUB_COUNTRY(USPTN)
                 IDX_SET_PUB_DATE(USPTN)
                 IDX_SET_APP_DOCNUMBER_IDX(USPTN)
-                IDX_SET_APP_COUNTRY(USPTN)
-                IDX_SET_APP_DATE_IDX(USPTN)
+                #IDX_SET_APP_COUNTRY(USPTN)
+                #IDX_SET_APP_DATE_IDX(USPTN)
                 IDX_SET_INV_TITLE(USPTN)
                 IDX_SET_APPLICANTS(USPTN)
                 IDX_SET_CITING(USPTN)

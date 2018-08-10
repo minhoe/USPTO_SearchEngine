@@ -28,7 +28,8 @@ def Valid_Keywords(_KEYWORDS):
     Keyword_list = []
     if _KEYWORDS != '' and _KEYWORDS != []:
         try:
-            Keyword_list = _KEYWORDS.split(';')
+            Keyword_list = _KEYWORDS.split(',')
+
             idx = 0
             while idx < len(Keyword_list):
                 if Keyword_list[idx] is '':
@@ -136,7 +137,8 @@ def DocNoToList(doc_src, mode):
             try:
                 ElementList = eval(doc_src)
             except:
-                pass
+                print(' Error. Failed to read doc numbers from parameter')
+                sys.exit(-1)
     else:
         pass
     return ElementList
@@ -185,7 +187,11 @@ def PatentToFile(Doc, CITING_IDX, fw):
                         '%'.join([repr(x) for x in Doc.citation_list]),
                         '%'.join([repr(x) for x in Doc.other_reference_list])
                         ])
+    if Doc.pub_docnumber in CITING_IDX:
+        citing_list = '%'.join([repr(x) for x in CITING_IDX[Doc.pub_docnumber]])
+        result = result + '\t' + citing_list
     #print(result)
+    #print(CITING_IDX[Doc.pub_docnumber])
     fw.write(result)
     fw.write('\n')
 
@@ -205,9 +211,12 @@ if __name__ == '__main__':
     CITING_IDX = {}
 
     # Input variables
-    CodeFileName = ''
+    CodePathFile = ''
     Tgt_Doc_No = ''
+    DocList_file  = []
+    DocList_param = []
     AND_KEYWORDS = []
+    OR_KEYWORDS  = []
     NOT_KEYWORDS = []
     Pub_FROM = ''
     Pub_TO = ''
@@ -228,6 +237,8 @@ if __name__ == '__main__':
             INV_TITLE_IDX = pickle.load(f)
             APPLICANTS_IDX = pickle.load(f)
             CITING_IDX = pickle.load(f)
+
+            #print(CITING_IDX.keys())
 
     except:
         print(' - ERROR on loading USPTO database. ')
@@ -304,8 +315,8 @@ if __name__ == '__main__':
 
     # Validate the arguments
     FLAG = False
-    DocList       = DocNoToList(CodePathFile, 'file')
-    DocList_param = DocNoToList(Tgt_Doc_No, 'param')
+    DocList_file   = DocNoToList(CodePathFile, 'file')
+    DocList_param  = DocNoToList(Tgt_Doc_No, 'param')
     AND_KEYWORDS, FLAG = Valid_Keywords(AND_KEYWORDS)
     NOT_KEYWORDS, FLAG = Valid_Keywords(NOT_KEYWORDS)
     Pub_FROM, FLAG = Valid_Date(Pub_FROM, 'From')
@@ -316,8 +327,8 @@ if __name__ == '__main__':
     # Print the arguments
     print()
     print('--- Input Parameters ---')
-    print('Doc-code file :', CodePathFile, len(DocList), 'DOC-codes.')
-    print('Doc-code No   :', Tgt_Doc_No)
+    print('Doc-code file :', CodePathFile, len(DocList_file), 'patent codes')
+    print('Doc-code No   :', len(DocList_param), 'patent codes.')
     print('AND keywords  :', AND_KEYWORDS, len(AND_KEYWORDS), 'keywords.')
     print('NOT keywords  :', NOT_KEYWORDS, len(NOT_KEYWORDS), 'keywords.')
     print('Pub. From     :', Pub_FROM)
@@ -332,14 +343,27 @@ if __name__ == '__main__':
         sys.exit('Program unsuccessfully terminated.')
 
     # Searching process start!
-    if CodePathFile != '' and DocList != []:
+    if CodePathFile != '' and DocList_file != []:
         print(' - Searching for patents in the file.')
-    elif Tgt_Doc_No != '':
-        print(' - Searching for the patent :', Tgt_Doc_No)
+    elif DocList_param != []:
+        print(' - Searching for the patent')
     else:
         # AND Keywords
         ANDPatentSet = set()
+        SetList = []
         for item in AND_KEYWORDS:
+            tempSet = set()
+            for key in INV_TITLE_IDX:
+                if item.lower() in key.lower():
+                    tempSet.update(INV_TITLE_IDX[key])
+            SetList.append(tempSet)
+            #print(item, len(tempSet))
+        ANDPatentSet = set.intersection(*SetList)
+        #print(len(ANDPatentSet))
+
+        # OR Keywords
+        ORPatentSet = set()
+        for item in OR_KEYWORDS:
             for key in INV_TITLE_IDX:
                 if item.lower() in key.lower():
                     ANDPatentSet.update(INV_TITLE_IDX[key])
@@ -412,33 +436,36 @@ if __name__ == '__main__':
     fw.write('\n')
 
     # Case 1 : Doc list in the file
-    if CodePathFile != '' and DocList != []:
+    if CodePathFile != '' and DocList_file != []:
         found_cnt = 0
         print(' - Case 1 : Search patents from doc-numbers in the file')
-        for item in DocList:
+        for item in DocList_file:
             if item in PATENT_IDX:
                 PatentToFile(PATENT_IDX[item], CITING_IDX, fw)
                 found_cnt += 1
             else:
                 print('  >  Cannot find the patent : ', item)
-        print(' \n- Patent searched :', len(DocList), '/ Found patents :', found_cnt)
+        print(' \n- Patent searched :', len(DocList_file), '/ Found patents :', found_cnt)
     # Case 2 : Doc number from parameter
-    elif Tgt_Doc_No != '':
+    elif DocList_param != []:
         found_cnt = 0
         print(' - Case 2 : Search patents from doc-numbers in the parameter')
-        for item in DocList:
-            if Tgt_Doc_No in PATENT_IDX:
-                pass
+        for item in DocList_param:
+            if item in PATENT_IDX:
+                PatentToFile(PATENT_IDX[item], CITING_IDX, fw)
+                found_cnt += 1
             else:
-                print('  >  Cannot find the patent : ', Tgt_Doc_No)
-        print(' \n- Patent searched :', len(DocList), '/ Found patents :', found_cnt)
+                print('  >  Cannot find the patent : ', item)
+        print(' \n- Patent searched :', len(DocList_param), '/ Found patents :', found_cnt)
     # Case 3 : Filtering by parameters
     else:
         print(' - Case 3 : Search patents from parameters')
         FilteredSet = set()
         # AND Keywords
-        if len(ANDPatentSet) > 0:
-            FilteredSet = ANDPatentSet
+        if len(AND_KEYWORDS) > 0:
+            print(' [AND] Found ', len(ANDPatentSet), 'patents.')
+            if len(ANDPatentSet) > 0:
+                FilteredSet = ANDPatentSet
 
         # Pub_From_To
         if len(PubDateSet) > 0:
